@@ -1,5 +1,6 @@
 ﻿using Core.Models;
 using Core.Repository;
+using Core.ResultType;
 
 namespace Core.Service;
 
@@ -14,17 +15,44 @@ public class TransactionService : ITransactionService
         _walletService = walletService;
     }
 
-    public void AddTransaction(int walletId, int id, DateTime transactionDate, decimal amount, TransactionType type, string description)
+    public void AddTransaction(int walletId, Transaction transaction)
     {
-        var newTransaction = new Transaction(id, transactionDate, amount, type, description);
-        _repository.Add(newTransaction);
-        _walletService.AddTransactionToWallet(newTransaction, walletId);
+        if (_walletService.AddTransactionToWallet(transaction, walletId) is ResultAddTransaction.Success)
+        {
+            _repository.Add(transaction);
+        }
+        else
+        {
+            throw new Exception("Failed to add transaction");
+        }
+    }
+
+    public void DeleteTransaction(int walletId, Transaction transaction)
+    {
+        _repository.Delete(transaction);
+        _walletService.DeleteTransaction(transaction, walletId);
+    }
+
+    public void UpdateTransaction(int walletId, Transaction transaction)
+    {
+        _repository.Update(transaction);
+    }
+
+    public Transaction GetTransactionById(int transactionId)
+    {
+       return _repository.GetById(transactionId) ?? throw new KeyNotFoundException();
+    }
+
+    public IEnumerable<Transaction> GetTransactions()
+    {
+        return _repository.List();
     }
 
     public IEnumerable<Transaction> GetTransactionsInMonthWithSort(int year, int month)
     {
         var transactions = _repository
-            .GetTransactionsInMonth(year, month)
+            .List()
+            .Where(t => t.Date.Year == year && t.Date.Month == month)
             .ToList();
 
         var incomeTransactions = transactions

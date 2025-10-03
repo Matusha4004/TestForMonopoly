@@ -4,7 +4,15 @@ namespace Core.Service;
 
 public interface ITransactionService
 {
-    public void AddTransaction(int walletId, int id, DateTime transactionDate, decimal amount, TransactionType type, string description);
+    public void AddTransaction(int walletId, Transaction transaction);
+
+    public void DeleteTransaction(int walletId, Transaction transaction);
+
+    public void UpdateTransaction(int walletId, Transaction transaction);
+
+    public Transaction GetTransactionById(int transactionId);
+
+    public IEnumerable<Transaction> GetTransactions();
 
     public IEnumerable<Transaction> GetTransactionsInMonthWithSort(int year, int month);
 }

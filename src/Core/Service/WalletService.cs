@@ -1,5 +1,6 @@
 ﻿using Core.Models;
 using Core.Repository;
+using Core.ResultType;
 
 namespace Core.Service;
 
@@ -17,25 +18,75 @@ public class WalletService : IWalletService
         _repositoryWallet.Add(wallet);
     }
 
-    public void AddTransactionToWallet(Transaction transaction, int walletId)
+    public ResultAddTransaction AddTransactionToWallet(Transaction transaction, int walletId)
     {
-        _repositoryWallet.GetById(walletId)?.AddTransaction(transaction);
+        Wallet? wallet = _repositoryWallet.GetById(walletId);
+        if (wallet == null) throw new Exception("Wallet not found");
+        return wallet.AddTransaction(transaction);
+    }
+
+    public void DeleteWallet(Wallet wallet)
+    {
+        _repositoryWallet.Delete(wallet);
+    }
+
+    public void ChangeWallet(Wallet wallet)
+    {
+        _repositoryWallet.Update(wallet);
+    }
+
+    public void DeleteTransaction(Transaction transaction, int walletId)
+    {
+        Wallet? oldWallet = _repositoryWallet.GetById(walletId);
+        if (oldWallet == null) throw new Exception("Wallet not found");
+        var newWallet = new Wallet(oldWallet.Id, oldWallet.Name, oldWallet.Currency, oldWallet.InitialBalance);
+        foreach (Transaction oldTransactions in oldWallet.Transactions.Where(t => t.Type == TransactionType.Income))
+        {
+            if (oldTransactions.Id != transaction.Id)
+            {
+                newWallet.AddTransaction(oldTransactions);
+            }
+        }
+
+        foreach (Transaction oldTransactions in oldWallet.Transactions.Where(t => t.Type == TransactionType.Expense))
+        {
+            if (oldTransactions.Id != transaction.Id)
+            {
+                newWallet.AddTransaction(oldTransactions);
+            }
+        }
+
+        _repositoryWallet.Update(newWallet);
+    }
+
+    public IEnumerable<Wallet> GetWallets()
+    {
+        return _repositoryWallet.List();
+    }
+
+    public Wallet GetWalletById(int id)
+    {
+        return _repositoryWallet.GetById(id) ?? throw new NullReferenceException();
     }
 
     public IEnumerable<Transaction> GetTopExpenses(int year, int month, int topN = 3)
     {
-        var topExpenses = new List<Transaction>();
-        foreach (var wallet in _repositoryWallet.List())
+        var wallets = _repositoryWallet.List().ToList();
+
+        var lists = new List<Transaction>();
+
+        foreach (Wallet wallet in wallets)
         {
-            topExpenses
+            lists
                 .AddRange(wallet.Transactions
-                    .Where(t => t.Date.Year == year && t.Date.Month == month)
-                    .Where(t => t.Type == TransactionType.Expense)
+                    .Where(data => data.Date.Year == year
+                                   && data.Date.Month == month
+                                   && data.Type == TransactionType.Expense)
                     .OrderByDescending(t => t.Amount)
                     .Take(topN)
                     .ToList());
         }
 
-        return topExpenses;
+        return lists;
     }
 }

@@ -2,13 +2,13 @@
 
 public interface IRepository<T>
 {
-    T? GetById(int id);
+    public T? GetById(int id);
 
-    IEnumerable<T> List();
+    public IEnumerable<T> List();
 
-    void Add(T entity);
+    public void Add(T entity);
 
-    void Update(T entity);
+    public void Update(T entity);
 
-    void Delete(T entity);
+    public void Delete(T entity);
 }

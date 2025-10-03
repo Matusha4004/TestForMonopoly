@@ -21,13 +21,13 @@ public class Wallet
             - Transactions.Where(t => t.Type is TransactionType.Expense).Sum(t => t.Amount);
     }
 
-    public Wallet(int id, string name, string currency, decimal initialBalance, IEnumerable<Transaction> transactions)
+    public Wallet(int id, string name, string currency, decimal initialBalance, IEnumerable<Transaction>? transactions = null)
     {
         Id = id;
         Name = name;
         Currency = currency;
         InitialBalance = initialBalance;
-        Transactions = transactions;
+        Transactions = transactions ?? new List<Transaction>();
     }
 
     public ResultAddTransaction AddTransaction(Transaction transaction)
