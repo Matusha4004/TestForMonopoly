@@ -29,12 +29,13 @@ public class InMemoryWalletRepository : IRepositoryWallet
 
     public void Update(Wallet entity)
     {
-        _wallets.ToList().Remove(_wallets.FirstOrDefault(t => entity.Id == t.Id) ?? throw new InvalidOperationException());
-        _wallets.ToList().Add(entity);
+        _wallets = _wallets.Where(t => t.Id != entity.Id);
+
+        _wallets = _wallets.Append(entity);
     }
 
     public void Delete(Wallet entity)
     {
-        _wallets.ToList().Remove(_wallets.FirstOrDefault(t => entity.Id == t.Id) ?? throw new InvalidOperationException());
+        _wallets = _wallets.Where(t => t.Id != entity.Id);
     }
 }
